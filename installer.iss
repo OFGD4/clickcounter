@@ -29,7 +29,7 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Start ClickCount"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "Start ClickCount"; Flags: nowait postinstall 
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\ClickCounter"

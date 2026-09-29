@@ -8,6 +8,10 @@ import threading
 import urllib.request
 import webbrowser
 
+import subprocess
+import tempfile
+from tkinter import messagebox
+
 window = tk.Tk()
 window.title("ClickCount")
 window.geometry("300x200")
@@ -46,22 +50,42 @@ def save_count():
 def parse_version(v):
     return tuple(int(x) for x in v.lstrip("v").split("."))
 
-def check_for_update():
+def check_for_update():                      # runs in the background
+    if not getattr(sys, "frozen", False):
+        return                               # running from source: no auto-update
     try:
         url = f"https://api.github.com/repos/{REPO}/releases/latest"
         with urllib.request.urlopen(url, timeout=5) as r:
-            latest = json.load(r)["tag_name"]
+            release = json.load(r)
+        latest = release["tag_name"]
         if parse_version(latest) > parse_version(VERSION):
-            window.after(0, show_update, latest)
+            setup_url = next((a["browser_download_url"] for a in release["assets"]
+                              if a["name"].endswith("-Setup.exe")), None)
+            if setup_url:
+                window.after(0, ask_update, latest, setup_url)
     except Exception:
-        pass
+        pass                                 # offline / no release: stay quiet
 
-def show_update(latest):
-    update_btn.config(text=f"Update available: {latest}")
-    update_btn.pack()
 
-def open_releases():
-    webbrowser.open(f"https://github.com/{REPO}/releases/latest")
+def ask_update(latest, setup_url):           # runs in the UI thread
+    if messagebox.askyesno("Update available",
+                           f"ClickCount {latest} is available (you have {VERSION}).\n\nUpdate now?"):
+        window.title("ClickCount - downloading update...")
+        threading.Thread(target=download_update, args=(setup_url,), daemon=True).start()
+
+
+def download_update(setup_url):              # runs in the background
+    try:
+        path = os.path.join(tempfile.gettempdir(), "ClickCount-Setup.exe")
+        urllib.request.urlretrieve(setup_url, path)
+        window.after(0, run_installer, path)
+    except Exception:
+        window.after(0, lambda: window.title("ClickCount - update failed"))
+
+
+def run_installer(path):                     # runs in the UI thread
+    subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"])
+    window.destroy()
 
 
 def update_label():
@@ -96,7 +120,7 @@ resbutton.pack()
 quote_label = tk.Label(window, wraplength=280, font=("Arial", 10, "italic"))
 quote_label.pack()
 
-update_btn = tk.Button(window, command=open_releases, fg="blue")
+
 window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
 ##
 window.mainloop()
