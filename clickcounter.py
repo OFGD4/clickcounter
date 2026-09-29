@@ -98,5 +98,5 @@ quote_label.pack()
 
 update_btn = tk.Button(window, command=open_releases, fg="blue")
 window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
-
+##
 window.mainloop()
