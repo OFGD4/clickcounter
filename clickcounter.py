@@ -81,8 +81,9 @@ def download_update(setup_url):              # runs in the background
         window.after(0, lambda: window.title("ClickCount - update failed"))
 
 
-def run_installer(path):                     # runs in the UI thread
-    subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"])
+def run_installer(path):
+    env = dict(os.environ, PYINSTALLER_RESET_ENVIRONMENT="1")
+    subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"], env=env)
     window.destroy()
 
 
