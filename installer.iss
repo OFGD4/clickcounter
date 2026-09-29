@@ -1,5 +1,7 @@
 #define AppName "ClickCount"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #define AppVersion "0.0.0"
+#endif
 #define AppExe "ClickCounter.exe"
 
 [Setup]

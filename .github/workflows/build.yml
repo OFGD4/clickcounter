@@ -20,6 +20,12 @@ jobs:
       - name: Install PyInstaller      # ← step labels: free text
         run: python -m pip install pyinstaller   # ← what your app needs installed
 
+      - name: Use the tag as the app version
+        if: github.ref_type == 'tag'
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart("v")
+          (Get-Content version.py) -replace "VERSION = '.*'", "VERSION = '$v'" | Set-Content version.py
+
       - name: Build exe
         run: pyinstaller ClickCount.spec         # ← your build command
 
@@ -34,7 +40,8 @@ jobs:
 
       - name: Build installer
         run: |
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer.iss            # ← where your exe ends up
+          $v = python -c "import version; print(version.VERSION)"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" installer.iss
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/')

@@ -2,6 +2,12 @@ import tkinter as tk
 import os
 import random
 import sys
+from version import VERSION, REPO
+import json
+import threading
+import urllib.request
+import webbrowser
+
 window = tk.Tk()
 window.title("ClickCount")
 window.geometry("300x200")
@@ -37,6 +43,27 @@ def save_count():
         f.write(str(counter))
 
 
+def parse_version(v):
+    return tuple(int(x) for x in v.lstrip("v").split("."))
+
+def check_for_update():
+    try:
+        url = f"https://api.github.com/repos/{REPO}/releases/latest"
+        with urllib.request.urlopen(url, timeout=5) as r:
+            latest = json.load(r)["tag_name"]
+        if parse_version(latest) > parse_version(VERSION):
+            window.after(0, show_update, latest)
+    except Exception:
+        pass
+
+def show_update(latest):
+    update_btn.config(text=f"Update available: {latest}")
+    update_btn.pack()
+
+def open_releases():
+    webbrowser.open(f"https://github.com/{REPO}/releases/latest")
+
+
 def update_label():
     label.config(text="count: "+ str(counter))
 
@@ -68,4 +95,8 @@ resbutton.pack()
 
 quote_label = tk.Label(window, wraplength=280, font=("Arial", 10, "italic"))
 quote_label.pack()
+
+update_btn = tk.Button(window, command=open_releases, fg="blue")
+window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
+
 window.mainloop()
