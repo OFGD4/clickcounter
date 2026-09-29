@@ -38,11 +38,13 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
-      - name: Build installer
+      - name: Use the tag as the app version
+        if: github.ref_type == 'tag'
         run: |
-          $v = python -c "import version; print(version.VERSION)"
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" installer.iss
-
+          $v = "${{ github.ref_name }}".TrimStart("v")
+          (Get-Content version.py) -replace "VERSION = .*", "VERSION = '$v'" | Set-Content version.py
+          Get-Content version.py
+          if (-not (Select-String -Quiet "VERSION = '$v'" version.py)) { throw "version.py was not updated" }
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
