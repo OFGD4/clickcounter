@@ -151,7 +151,7 @@ quote_label = tk.Label(window, wraplength=280, font=("Arial", 10, "italic"))
 quote_label.pack()
 
 
-window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
+
 ###
 
 window.after(500, startup_checks)
