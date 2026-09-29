@@ -24,8 +24,7 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           $v = "${{ github.ref_name }}".TrimStart("v")
-          (Get-Content version.py) -replace "VERSION = .*", "VERSION = '$v'" | Set-Content version.py
-          Get-Content version.py
+                    (Get-Content version.py) -replace "VERSION\s*=.*", "VERSION = '$v'" | Set-Content version.py
           if (-not (Select-String -Quiet "VERSION = '$v'" version.py)) { throw "version.py was not updated" }
 
 
