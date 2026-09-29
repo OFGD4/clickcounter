@@ -6,8 +6,6 @@ from version import VERSION, REPO
 import json
 import threading
 import urllib.request
-import webbrowser
-
 import subprocess
 import tempfile
 from tkinter import messagebox
