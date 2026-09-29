@@ -152,7 +152,7 @@ quote_label.pack()
 
 
 
-###
+####
 
 window.after(500, startup_checks)
 window.mainloop()
