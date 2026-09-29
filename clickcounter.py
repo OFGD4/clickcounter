@@ -86,6 +86,21 @@ def run_installer(path):
     subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"], env=env)
     window.destroy()
 
+VERSION_FILE = os.path.join(DATA_DIR, "last_version.txt")
+
+def check_just_updated():
+    if not getattr(sys, "frozen", False):
+        return                                   # running from source: skip
+    try:
+        with open(VERSION_FILE, encoding="utf-8") as f:
+            previous = f.read().strip()
+    except OSError:
+        previous = None                          # first run after a fresh install
+    if previous and previous != VERSION:
+        messagebox.showinfo("Updated", f"ClickCount was updated from {previous} to {VERSION}.")
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(VERSION_FILE, "w", encoding="utf-8") as f:
+        f.write(VERSION)
 
 def update_label():
     label.config(text="count: "+ str(counter))
