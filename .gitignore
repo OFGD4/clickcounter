@@ -1,0 +1,5 @@
+.venv/
+bulid/
+dist/
+__pycache__/
+mkwa.png
