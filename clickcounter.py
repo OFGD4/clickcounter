@@ -73,18 +73,30 @@ def ask_update(latest, setup_url):           # runs in the UI thread
 
 #
 def download_update(setup_url):              # runs in the background
+    def progress(blocks, block_size, total):
+        if total > 0:
+            pct = min(100, blocks * block_size * 100 // total)
+            window.after(0, window.title, f"ClickCount - downloading update... {pct}%")
     try:
         path = os.path.join(tempfile.gettempdir(), "ClickCount-Setup.exe")
-        urllib.request.urlretrieve(setup_url, path)
+        urllib.request.urlretrieve(setup_url, path, progress)
         window.after(0, run_installer, path)
-    except Exception:
-        window.after(0, lambda: window.title("ClickCount - update failed"))
+    except Exception as e:
+        msg = f"Could not download the update:\n{e}"
+        window.after(0, messagebox.showerror, "Update failed", msg)
 
 
-def run_installer(path):
+def run_installer(path):                     # runs in the UI thread
+    log = os.path.join(tempfile.gettempdir(), "ClickCount-update.log")
     env = dict(os.environ, PYINSTALLER_RESET_ENVIRONMENT="1")
-    subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"], env=env)
-    window.destroy()
+    try:
+        subprocess.Popen([path, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART",
+                          "/CLOSEAPPLICATIONS", "/FORCECLOSEAPPLICATIONS", f"/LOG={log}"], env=env)
+    except OSError as e:
+        messagebox.showerror("Update failed", f"Could not start the installer:\n{e}")
+        window.title(f"ClickCount {VERSION}")
+        return
+    os._exit(0)                              # q
 
 VERSION_FILE = os.path.join(DATA_DIR, "last_version.txt")
 
@@ -101,6 +113,10 @@ def check_just_updated():
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(VERSION_FILE, "w", encoding="utf-8") as f:
         f.write(VERSION)
+
+def startup_checks():
+    check_just_updated()          # waits here while the "Updated" message is open
+    threading.Thread(target=check_for_update, daemon=True).start()
 
 def update_label():
     label.config(text="count: "+ str(counter))
@@ -138,5 +154,5 @@ quote_label.pack()
 window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
 ##
 
-window.after(500, check_just_updated)
+window.after(500, startup_checks)
 window.mainloop()
