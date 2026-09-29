@@ -71,7 +71,7 @@ def ask_update(latest, setup_url):           # runs in the UI thread
         window.title("ClickCount - downloading update...")
         threading.Thread(target=download_update, args=(setup_url,), daemon=True).start()
 
-
+#
 def download_update(setup_url):              # runs in the background
     try:
         path = os.path.join(tempfile.gettempdir(), "ClickCount-Setup.exe")
@@ -137,4 +137,6 @@ quote_label.pack()
 
 window.after(1000, lambda: threading.Thread(target=check_for_update, daemon=True).start())
 ##
+
+window.after(500, check_just_updated)
 window.mainloop()
